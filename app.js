@@ -39,6 +39,7 @@ const logIn = 'SELECT * FROM users WHERE user_name = ? AND user_age = ?';
 const user = {
     name:"",
     age:"",
+    password:"",
     exp:0,
     lvl:0
 };
