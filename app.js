@@ -1,11 +1,3 @@
-const bcrypt = require('bcryptjs');
-
-
-
-
-
-
-
 /////////////////////////////////////
 // express connection 
 
@@ -39,8 +31,9 @@ app.use(passport.session());
 //sqlite connection 
 const sqlite3 = require('sqlite3');
 const { emitWarning } = require('process');
+const bcryptjs = require('bcryptjs');
 const db = new sqlite3.Database('user.db');
-const insertQuery = 'INSERT INTO users (user_name, user_age) VALUES (?, ?)';
+const insertQuery = 'INSERT INTO users (user_name, user_age, user_password) VALUES (?, ?, ?)';
 const updateLvl = 'UPDATE users SET user_exp = ?, user_lvl = ? WHERE user_name = ?';
 const logIn = 'SELECT * FROM users WHERE user_name = ? AND user_age = ?';
 //////////////////////////////////////////////////////////////////
@@ -73,7 +66,7 @@ function trainingTime(exerciceExp,exerciceTime){
 }
 ///////////////////////////////////////////////////
 //log in function 
-function login(){
+function oldeLogin /*reference pas bon */(){
     console.log("please create an Account :)");  
             rl.question('Enter your name: ', (name) => {
                 user.name = name;
@@ -86,6 +79,23 @@ function login(){
                     })
                     })
                 })};
+//////////////////////////////////////////////////////
+//hashing password function 
+
+function passwordHasher(password, callback){
+    //Generate a salt to use for hashing
+    bcrypt.genSalt(10, (err, salt) =>{
+        if (err) throw err;
+
+        //hash the password using the generated salt 
+        bcrypt.hash(password, salt, (err, hash) => {
+            if (err) throw err;
+
+            // invoke the callback
+            callback(hash)
+        })
+    })
+}
 //////////////////////////////////////////////////////
  //welcome function 
 function welcome(req, res){
@@ -121,5 +131,19 @@ function welcome(req, res){
     }
 }
 
-console.log("welcome to your Training Tracker");
-welcome();
+/////////////////////////////////////////////////////
+//Acount creating fomr path
+app.post('/create-account', (req, res)=>{
+    const { username, age, password } = req.body;
+
+    //call passwordHasher
+    passwordHasher(password, (hashedPassword) => {
+        // Store the hashed password in the database
+        db.run(insertQuery, [username, age, hashedPassword], function (error) {
+            if (error) throw error;
+      
+            console.log("User account added");
+            res.send("Account created successfully");
+        });
+    });
+});
