@@ -1,5 +1,14 @@
+const bcrypt = require('bcryptjs');
 
+
+
+
+
+
+
+/////////////////////////////////////
 // express connection 
+
 const express = require('express');
 const app = express();
 const session = require('express-session');
@@ -39,7 +48,7 @@ const logIn = 'SELECT * FROM users WHERE user_name = ? AND user_age = ?';
 const user = {
     name:"",
     age:"",
-    password:"",
+    password:NaN,
     exp:0,
     lvl:0
 };
@@ -70,7 +79,7 @@ function login(){
                 user.name = name;
                 rl.question("Enter age:? ", (age) => {
                     user.age = age;
-                    db.run(insertQuery, [user.name, user.age], function (error){
+                    db.run(insertQuery, [user.name, user.age, user.password], function (error){
                         if (error) throw error;
                         console.log("User have been add to the database");
                         welcome()
@@ -86,13 +95,15 @@ function welcome(req, res){
     if(req.isAuthenticated()) {
         const username = req.body.username;
         const age = req.body.age ;
+        const password = req.body.password;
         const logInQuery = 'SELECT * FROM users WHERE user_name = ? AND user_age = ? ';
-        db.get(logInQuery, [username, age], (error, row) => {
+        db.get(logInQuery, [username, age, password], (error, row) => {
             if (error){throw error};
             if (row) {
                 user.name = row.user_name;
                 user.age = row.user_age;
                 user.exp = row.user_exp;
+                user.password = row.user_password;
                 user.lvl = row.user_lvl;
                 console.log("User information have been retrieved:");
                 console.log("Username: " + user.name);
