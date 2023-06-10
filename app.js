@@ -132,7 +132,9 @@ function welcome(req, res){
 }
 
 /////////////////////////////////////////////////////
-//Acount creating fomr path
+//Acount creating form path
+
+//path
 app.post('/create-account', (req, res)=>{
     const { username, age, password } = req.body;
 
