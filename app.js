@@ -21,7 +21,8 @@ app.use(session({
 
 
 //passport connection;
-const passport = require('./passport');//import the passport.js file
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
 
 app.use(passport.initialize());
 app.use(passport.session());
@@ -97,8 +98,8 @@ function passwordHasher(password, callback){
     })
 }
 //////////////////////////////////////////////////////
- //welcome function 
-function welcome(req, res){
+ //logIn function 
+function logIn(req, res){
     //check if user has an account on session or cookies
 
     //if the user is logged in, retrieve their information and render the dashboard
@@ -149,3 +150,8 @@ app.post('/create-account', (req, res)=>{
         });
     });
 });
+
+//////////////////////////////////////////
+//log in path
+
+app.post('/login')

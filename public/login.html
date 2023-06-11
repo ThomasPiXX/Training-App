@@ -1,28 +1,34 @@
 <!DOCTYPE html>
-
 <html>
     <head>
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
-        <title></title>
+        <title>LogIn Form</title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="">
+        <link rel="stylesheet" type ="text/css" href="style.css">
     </head>
     <body>
-        <form action="/create-account" method="POST">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" required>
-
-            <label for="age">Age:</label>
-            <input type="text" id="age" name="Age" required>
-
-            <label for="Password">Password:</label>
-            <input type="text" id ="password" name ="password" require>
-
-            <button type = "submit">Create Account</button>
-        </form>
-        
-        
+        <div class ="container">
+            <h2>Login Form</h2>
+            <form action="/login" method="GET">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" class="login-input" placeholder="Enter your username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" class="login-input" placeholder="Enter your password" required>
+                </div>
+                <div class="form-group">
+                    <label for="age">Age</label>
+                    <input type="age" id="age" name="age" class="login-input" placeholder="Your age" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit">Login</button>
+                </div>
+            </form>
+        </div>
+        <script src="" async defer></script>
     </body>
 </html>
