@@ -1,6 +1,5 @@
 /////////////////////////////////////
 // express connection 
-
 const express = require('express');
 const app = express();
 const session = require('express-session');
@@ -20,12 +19,51 @@ app.use(session({
 }));
 
 
+
 //passport connection;
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
+const bcrypt = require('bcryptjs');
 
 app.use(passport.initialize());
 app.use(passport.session());
+
+passport.use(new LocalStrategy((username, password, done) => {
+    const logInQuery = 'SELECT * FROM users WHERE user_name = ? AND user_password = ?';
+    db.get(logInQuery, [username, password], (error, row) =>{
+        if(error) {
+            return done(error);
+        }
+        if ( !row ) {
+            return done(null, false, {message : 'Incorect usernam or password'});
+        }
+
+        const user = new User(row.user_name,row.user_age, row.user_password, row.user_exp, row.user_lvl);
+        
+        // Compare the provided password with the hashed password stored in the user object
+
+        bcrypt.compare(password, user.password, (err, isMatch) => {
+            if(err){
+                return done(err);
+            }
+            if (!isMatch) {
+                return done(null, false, {messsage : 'Incorrect username or password'});
+
+            }
+             // Authentication successful
+            return done(null, user);
+            });
+        });
+    })
+);
+
+// Serialize the user for session storage
+passport.serializeUser((user, done) => {
+    done(null, user.name); //store the user name in the session
+});
+// Deserialize the user from session storage
+passport.deserializeUser((name, done) => {
+
 
 /////////////////////////////////////
 
@@ -33,19 +71,22 @@ app.use(passport.session());
 const sqlite3 = require('sqlite3');
 const { emitWarning } = require('process');
 const bcryptjs = require('bcryptjs');
+const { error } = require('console');
 const db = new sqlite3.Database('user.db');
 const insertQuery = 'INSERT INTO users (user_name, user_age, user_password) VALUES (?, ?, ?)';
 const updateLvl = 'UPDATE users SET user_exp = ?, user_lvl = ? WHERE user_name = ?';
 const logIn = 'SELECT * FROM users WHERE user_name = ? AND user_age = ?';
 //////////////////////////////////////////////////////////////////
-//user referennce
-const user = {
-    name:"",
-    age:"",
-    password:NaN,
-    exp:0,
-    lvl:0
-};
+//user model
+class User {
+    constructor(username, age, password, exp = 0, lvl = 0){
+        this.name = username;
+        this.age = age;
+        this.password = password;
+        this.exp = exp;
+        this.lvl = lvl;
+    }
+}
 ////////////////////////////////////////////////////
 // lvl up function 
 function lvlUp(){
@@ -65,21 +106,6 @@ function trainingTime(exerciceExp,exerciceTime){
     user.exp = total;
     return lvlUp(user.exp) ;
 }
-///////////////////////////////////////////////////
-//log in function 
-function oldeLogin /*reference pas bon */(){
-    console.log("please create an Account :)");  
-            rl.question('Enter your name: ', (name) => {
-                user.name = name;
-                rl.question("Enter age:? ", (age) => {
-                    user.age = age;
-                    db.run(insertQuery, [user.name, user.age, user.password], function (error){
-                        if (error) throw error;
-                        console.log("User have been add to the database");
-                        welcome()
-                    })
-                    })
-                })};
 //////////////////////////////////////////////////////
 //hashing password function 
 
@@ -107,15 +133,15 @@ function logIn(req, res){
         const username = req.body.username;
         const age = req.body.age ;
         const password = req.body.password;
-        const logInQuery = 'SELECT * FROM users WHERE user_name = ? AND user_age = ? ';
+        const logInQuery = 'SELECT * FROM users WHERE user_name = ? AND user_age = ? AND user_password = ?';
         db.get(logInQuery, [username, age, password], (error, row) => {
             if (error){throw error};
             if (row) {
-                user.name = row.user_name;
-                user.age = row.user_age;
-                user.exp = row.user_exp;
-                user.password = row.user_password;
-                user.lvl = row.user_lvl;
+                User.username = row.user_name;
+                User.age = row.user_age;
+                User.exp = row.user_exp;
+                User.password = row.user_password;
+                User.lvl = row.user_lvl;
                 console.log("User information have been retrieved:");
                 console.log("Username: " + user.name);
                 
@@ -154,4 +180,4 @@ app.post('/create-account', (req, res)=>{
 //////////////////////////////////////////
 //log in path
 
-app.post('/login')
+app.post('/login', logIn);
