@@ -29,7 +29,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 passport.use(new LocalStrategy((username, password, done) => {
-    const logInQuery = 'SELECT * FROM users WHERE user_name = ? AND user_password = ?';
     db.get(logInQuery, [username, password], (error, row) =>{
         if(error) {
             return done(error);
@@ -42,12 +41,12 @@ passport.use(new LocalStrategy((username, password, done) => {
         
         // Compare the provided password with the hashed password stored in the user object
 
-        bcrypt.compare(password, user.password, (err, isMatch) => {
-            if(err){
-                return done(err);
+        bcrypt.compare(password, user.password, (error, isMatch) => {
+            if(error){
+                return done(error);
             }
             if (!isMatch) {
-                return done(null, false, {messsage : 'Incorrect username or password'});
+               return done(null, false, {messsage : 'Incorrect username or password'});
 
             }
              // Authentication successful
@@ -63,6 +62,24 @@ passport.serializeUser((user, done) => {
 });
 // Deserialize the user from session storage
 passport.deserializeUser((name, done) => {
+    //find the user by their name 
+    db.get(logInQuery, [name], (error, row) => {
+        if(error){
+            return (error);
+        }
+        if(!row){
+            return done(new Error('no data found'));
+        }
+
+        const user = new User(row.user_name, row.user_age, row.user_exp, row.user_lvl, row.user_password);
+        return done(null, user);
+    
+    });
+});
+
+//initialize Passport and session middleware
+app.use(passport.initialize());
+app.use(passport.session());
 
 
 /////////////////////////////////////
@@ -75,7 +92,8 @@ const { error } = require('console');
 const db = new sqlite3.Database('user.db');
 const insertQuery = 'INSERT INTO users (user_name, user_age, user_password) VALUES (?, ?, ?)';
 const updateLvl = 'UPDATE users SET user_exp = ?, user_lvl = ? WHERE user_name = ?';
-const logIn = 'SELECT * FROM users WHERE user_name = ? AND user_age = ?';
+const logInQuery = 'SELECT * FROM users WHERE user_name = ? AND user_password = ?';
+
 //////////////////////////////////////////////////////////////////
 //user model
 class User {
@@ -133,8 +151,7 @@ function logIn(req, res){
         const username = req.body.username;
         const age = req.body.age ;
         const password = req.body.password;
-        const logInQuery = 'SELECT * FROM users WHERE user_name = ? AND user_age = ? AND user_password = ?';
-        db.get(logInQuery, [username, age, password], (error, row) => {
+        db.get(logInQuery, [username, password], (error, row) => {
             if (error){throw error};
             if (row) {
                 User.username = row.user_name;
@@ -163,12 +180,12 @@ function logIn(req, res){
 
 //path
 app.post('/create-account', (req, res)=>{
-    const { username, age, password } = req.body;
+    const { username, password } = req.body;
 
     //call passwordHasher
     passwordHasher(password, (hashedPassword) => {
         // Store the hashed password in the database
-        db.run(insertQuery, [username, age, hashedPassword], function (error) {
+        db.run(insertQuery, [username, hashedPassword], function (error) {
             if (error) throw error;
       
             console.log("User account added");
@@ -180,4 +197,4 @@ app.post('/create-account', (req, res)=>{
 //////////////////////////////////////////
 //log in path
 
-app.post('/login', logIn);
+app.post('/login', logIn)
