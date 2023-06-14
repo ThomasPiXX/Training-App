@@ -56,27 +56,6 @@ passport.use(new LocalStrategy((username, password, done) => {
     })
 );
 
-// Serialize the user for session storage
-passport.serializeUser((user, done) => {
-    done(null, user.name); //store the user name in the session
-});
-// Deserialize the user from session storage
-passport.deserializeUser((name, done) => {
-    //find the user by their name 
-    db.get(logInQuery, [name], (error, row) => {
-        if(error){
-            return (error);
-        }
-        if(!row){
-            return done(new Error('no data found'));
-        }
-
-        const user = new User(row.user_name, row.user_age, row.user_exp, row.user_lvl, row.user_password);
-        return done(null, user);
-    
-    });
-});
-
 //initialize Passport and session middleware
 app.use(passport.initialize());
 app.use(passport.session());
@@ -85,10 +64,7 @@ app.use(passport.session());
 /////////////////////////////////////
 
 //sqlite connection 
-const sqlite3 = require('sqlite3');
-const { emitWarning } = require('process');
-const bcryptjs = require('bcryptjs');
-const { error } = require('console');
+const sqlite3 = require('sqlite3');;
 const db = new sqlite3.Database('user.db');
 const insertQuery = 'INSERT INTO users (user_name, user_age, user_password) VALUES (?, ?, ?)';
 const updateLvl = 'UPDATE users SET user_exp = ?, user_lvl = ? WHERE user_name = ?';
@@ -97,8 +73,8 @@ const logInQuery = 'SELECT * FROM users WHERE user_name = ? AND user_password = 
 //////////////////////////////////////////////////////////////////
 //user model
 class User {
-    constructor(username, age, password, exp = 0, lvl = 0){
-        this.name = username;
+    constructor(name, age, password, exp = 0, lvl = 0){
+        this.name = name;
         this.age = age;
         this.password = password;
         this.exp = exp;
@@ -144,10 +120,10 @@ function passwordHasher(password, callback){
 //////////////////////////////////////////////////////
  //logIn function 
 function logIn(req, res) {
-    const { username, password } = req.body //get username and password from the form for middleware
+    const { username } = req.body //get username and password from the form for middleware
     
     //check the Datebase for a row
-    db.run('SELECT * FROM use WERE user_name = ?', [username], function(error, row) {
+    db.run('SELECT * FROM user WERE user_name = ?', [username], function(error, row) {
         if(error) {
             throw error;
         }
@@ -156,11 +132,14 @@ function logIn(req, res) {
             return res.render('create-account');
         }
         else{
-            User.name = row.user_name;
-            User.password = row.user_password;
-            User.lvl = row.user_lvl;
-            LocalStrategy(User.name, User.password);
-
+            const user = new User(row.user_name, row.user_exp, row.user_lvl);
+            req.login(User, (error) => {
+                if(err) {
+                    throw err;
+                }
+                console.log('User has been serialized and added to the session');
+                return res.render('dashboard', {user});
+            });
 
         }
     })
@@ -197,4 +176,7 @@ app.post('/create-account', (req, res)=>{
 //////////////////////////////////////////
 //log in path
 
-app.post('/login', logIn)
+app.post('/login', passport.authenticate('local', {
+    successRedirect :'/dashboard',
+    failureRedirect: '/login',
+}), logIn);
