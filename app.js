@@ -143,36 +143,27 @@ function passwordHasher(password, callback){
 }
 //////////////////////////////////////////////////////
  //logIn function 
-function logIn(req, res){
-    //check if user has an account on session or cookies
+function logIn(req, res) {
+    const { username, password } = req.body //get username and password from the form for middleware
+    
+    //check the Datebase for a row
+    db.run('SELECT * FROM use WERE user_name = ?', [username], function(error, row) {
+        if(error) {
+            throw error;
+        }
+        if (!row) {
+            console.log('ther is now User with that name ')
+            return res.render('create-account');
+        }
+        else{
+            User.name = row.user_name;
+            User.password = row.user_password;
+            User.lvl = row.user_lvl;
+            LocalStrategy(User.name, User.password);
 
-    //if the user is logged in, retrieve their information and render the dashboard
-    if(req.isAuthenticated()) {
-        const username = req.body.username;
-        const age = req.body.age ;
-        const password = req.body.password;
-        db.get(logInQuery, [username, password], (error, row) => {
-            if (error){throw error};
-            if (row) {
-                User.username = row.user_name;
-                User.age = row.user_age;
-                User.exp = row.user_exp;
-                User.password = row.user_password;
-                User.lvl = row.user_lvl;
-                console.log("User information have been retrieved:");
-                console.log("Username: " + user.name);
-                
-                //Render the dashboard template and pass the user object
-                res.render('dashboard', {user});    
-            }else{
-                console.log("No user found. Please create an account.");
-                res.render('create-acocount');
-            }
-        }); 
-    }else{
-        //if user is not logged in, render the login page
-        res.render('login');
-    }
+
+        }
+    })
 }
 
 /////////////////////////////////////////////////////
@@ -180,20 +171,29 @@ function logIn(req, res){
 
 //path
 app.post('/create-account', (req, res)=>{
-    const { username, password } = req.body;
+    const {username, password} = req.body;
+    
+    //check if user already exist 
+    db.run("SELECT * FROM user WHERE user_name=?",[username], function(error, row) {
+    if(error) throw error;
+    
+    if(row) {
+        console.log('User already exist');
+        res.statuts(400).send('User already exist');
+    }else{
+        //call passwordHasher
+        passwordHasher(password, (hashedPassword) => {
+            //Store the hashed password in the database
+            db.run("INSERT INTO users (username, password) VALUES (?, ?)", [username, hashedPassword], function(error){
+                if (error) throw error;
 
-    //call passwordHasher
-    passwordHasher(password, (hashedPassword) => {
-        // Store the hashed password in the database
-        db.run(insertQuery, [username, hashedPassword], function (error) {
-            if (error) throw error;
-      
-            console.log("User account added");
-            res.send("Account created successfully");
+                console.log("User account added");
+                res.send("Acccount created succesfully");
+            });
         });
+    }
     });
 });
-
 //////////////////////////////////////////
 //log in path
 
