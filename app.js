@@ -209,6 +209,7 @@ app.post('/userLevel', (req, res) =>{
             console.log('SQL query executed successfully');
             res.status(200).send('great job!');
         }
+        return res.render('dashboard', {userId});
     });
 });
 
