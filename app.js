@@ -84,21 +84,20 @@ class User {
 ////////////////////////////////////////////////////
 // lvl up function 
 function lvlUp(){
-    while(user.exp >= 10){
-    const remExp = user.exp - 10;
-    user.exp = remExp;
-    user.lvl++;
+    while(User.exp >= 10){
+    const remExp = User.exp - 10;
+    User.exp = remExp;
+    User.lvl++;
     };
 }
 /////////////////////////////////////////////////////
 //training function 
 const exerciceExp = 1;
-let exerciceTime = NaN;
 
 function trainingTime(exerciceExp,exerciceTime){
     let total = exerciceExp * exerciceTime;
-    user.exp = total;
-    return lvlUp(user.exp) ;
+    User.exp = total;
+    return lvlUp(User.exp) ;
 }
 //////////////////////////////////////////////////////
 //hashing password function 
@@ -149,7 +148,7 @@ function logIn(req, res) {
 //Acount creating form path
 
 //path
-app.post('/create-account', (req, res)=>{
+app.post('/createAccount', (req, res)=>{
     const {username, password} = req.body;
     
     //check if user already exist 
@@ -180,3 +179,36 @@ app.post('/login', passport.authenticate('local', {
     successRedirect :'/dashboard',
     failureRedirect: '/login',
 }), logIn);
+
+
+
+/////////////////////////////////////////////
+//Upadting user lvl
+
+app.post('/userLevel', (req, res) =>{
+    //getting UserID
+    const userId = req.session.user;
+    User = userId;
+    const userExperience = User.exp;
+    const userLvl = User.lvl;
+    //getting the exerciceTime value 
+    const {Time} = req.body;
+    exerciceTime = Time;
+    
+    
+    //calling the lvl updater 
+    trainingTime(exerciceTime, exerciceExp);
+
+    console.log('lvl up as been executed properly');
+    //adding user lvl and experience to Database
+    db.run(updateLvl, [userId, userExperience, userLvl], (err) => {
+        if(err) {
+            console.error('Error updating user level in the database:', err);
+            res.status(500).send('Error updating user level in the database');
+        } else {
+            console.log('SQL query executed successfully');
+            res.status(200).send('great job!');
+        }
+    });
+});
+
