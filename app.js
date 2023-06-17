@@ -1,9 +1,10 @@
 /////////////////////////////////////
 // express connection 
 const express = require('express');
+const bodyParser = require('body-parser');
 const app = express();
 const session = require('express-session');
-const port = 3000;
+const port = 5000;
 app.use(express.urlencoded({extend: true}));
 app.use(express.static('public'));
 app.listen(port, () => {
@@ -17,6 +18,8 @@ app.use(session({
     resave: false,
     saveUninitialized: false
 }));
+// Set view engine
+app.set('view engine', 'ejs');
 
 
 
@@ -90,6 +93,10 @@ function lvlUp(){
     User.lvl++;
     };
 }
+/////////////////////////////////////////////////////
+// user body-parser middleware with extended option
+app.use(bodyParser.urlencoded({ extended: true}));
+app.use(bodyParser.json());
 /////////////////////////////////////////////////////
 //training function 
 const exerciceExp = 1;
@@ -211,5 +218,9 @@ app.post('/userLevel', (req, res) =>{
         }
         return res.render('dashboard', {userId});
     });
+});
+
+app.listen(port, () => {
+    console.log(`Server running on http://localhost:${port}`)
 });
 
