@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 const app = express();
 const session = require('express-session');
 const port = 5000;
-app.use(express.urlencoded({extend: true}));
+app.use(express.urlencoded({extended: true}));
 app.use(express.static('public'));
 app.listen(port, () => {
     console.log('server running on http: //localhost:${port}');
@@ -28,8 +28,7 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcryptjs');
 
-app.use(passport.initialize());
-app.use(passport.session());
+//passport 
 
 passport.use(new LocalStrategy((username, password, done) => {
     db.get(logInQuery, [username, password], (error, row) =>{
@@ -71,7 +70,7 @@ const sqlite3 = require('sqlite3');;
 const db = new sqlite3.Database('user.db');
 const insertQuery = 'INSERT INTO users (user_name, user_age, user_password) VALUES (?, ?, ?)';
 const updateLvl = 'UPDATE users SET user_exp = ?, user_lvl = ? WHERE user_name = ?';
-const logInQuery = 'SELECT * FROM users WHERE user_name = ? AND user_password = ?';
+
 
 //////////////////////////////////////////////////////////////////
 //user model
@@ -86,11 +85,11 @@ class User {
 }
 ////////////////////////////////////////////////////
 // lvl up function 
-function lvlUp(){
-    while(User.exp >= 10){
-    const remExp = User.exp - 10;
-    User.exp = remExp;
-    User.lvl++;
+function lvlUp(user){
+    while(user.exp >= 10){
+    const remExp = user.exp - 10;
+    user.exp = remExp;
+    user.lvl++;
     };
 }
 /////////////////////////////////////////////////////
@@ -101,10 +100,10 @@ app.use(bodyParser.json());
 //training function 
 const exerciceExp = 1;
 
-function trainingTime(exerciceExp,exerciceTime){
+function trainingTime(exerciceExp,exerciceTime, user){
     let total = exerciceExp * exerciceTime;
-    User.exp = total;
-    return lvlUp(User.exp) ;
+    user.exp = total;
+    return lvlUp(user.exp) ;
 }
 //////////////////////////////////////////////////////
 //hashing password function 
@@ -129,7 +128,7 @@ function logIn(req, res) {
     const { username } = req.body //get username and password from the form for middleware
     
     //check the Datebase for a row
-    db.run('SELECT * FROM user WERE user_name = ?', [username], function(error, row) {
+    db.run('SELECT * FROM users WERE user_name = ?', [username], function(error, row) {
         if(error) {
             throw error;
         }
@@ -195,7 +194,6 @@ app.post('/login', passport.authenticate('local', {
 app.post('/userLevel', (req, res) =>{
     //getting UserID
     const userId = req.session.user;
-    User = userId;
     const userExperience = User.exp;
     const userLvl = User.lvl;
     //getting the exerciceTime value 
@@ -215,8 +213,8 @@ app.post('/userLevel', (req, res) =>{
         } else {
             console.log('SQL query executed successfully');
             res.status(200).send('great job!');
+            return res.render('dashboard', {userId});
         }
-        return res.render('dashboard', {userId});
     });
 });
 
