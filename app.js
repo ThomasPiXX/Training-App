@@ -8,6 +8,14 @@ const session = require('express-session');
 app.use(express.urlencoded({extended: true}));
 app.use(express.static('public'));
 
+///////////////////////////////////////////
+//sqlite connection 
+const sqlite3 = require('sqlite3');;
+const db = new sqlite3.Database('users.db');
+const insertQuery = 'INSERT INTO users (user_name, user_age, user_password) VALUES (?, ?, ?)';
+const updateLvl = 'UPDATE users SET user_exp = ?, user_lvl = ? WHERE user_name = ?';
+const logInQuery ='SELECT user_name, user_password FROM users WHERE user_name = ? AND user_password = ?'
+
 /////////////////////////
 //session config
 app.use(session({
@@ -17,6 +25,8 @@ app.use(session({
 }));
 // Set view engine
 app.set('view engine', 'ejs');
+const path = require('path');
+app.set('views', path.join(__dirname, 'view'));
 
 
 
@@ -80,13 +90,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 
-/////////////////////////////////////
-
-//sqlite connection 
-const sqlite3 = require('sqlite3');;
-const db = new sqlite3.Database('user.db');
-const insertQuery = 'INSERT INTO users (user_name, user_age, user_password) VALUES (?, ?, ?)';
-const updateLvl = 'UPDATE users SET user_exp = ?, user_lvl = ? WHERE user_name = ?';
 
 
 //////////////////////////////////////////////////////////////////
@@ -145,22 +148,22 @@ function logIn(req, res) {
     const { username } = req.body //get username and password from the form for middleware
     
     //check the Datebase for a row
-    db.run('SELECT * FROM users WERE user_name = ?', [username], function(error, row) {
+    db.run('SELECT * FROM users WHERE user_name = ?', [username], function(error, row) {
         if(error) {
             throw error;
         }
         if (!row) {
             console.log('ther is now User with that name ')
-            return res.render('create-account');
+            return res.render('createAccount');
         }
         else{
             const user = new User(row.user_name, row.user_exp, row.user_lvl);
-            req.login(User, (error) => {
+            req.login(user, (error) => {
                 if(err) {
                     throw err;
                 }
                 console.log('User has been serialized and added to the session');
-                return res.render('dashboard', {user});
+                return res.render('dashboard', { user });
             });
 
         }
@@ -171,16 +174,18 @@ function logIn(req, res) {
 //Acount creating form path
 
 //path
+
+
 app.post('/createAccount', (req, res)=>{
     const {username, password} = req.body;
     
     //check if user already exist 
-    db.run("SELECT * FROM user WHERE user_name=?",[username], function(error, row) {
+    db.run("SELECT * FROM users WHERE user_name=?",[username], function(error, row) {
     if(error) throw error;
     
     if(row) {
         console.log('User already exist');
-        res.statuts(400).send('User already exist');
+        res.status(400).send('User already exist');
     }else{
         //call passwordHasher
         passwordHasher(password, (hashedPassword) => {
@@ -197,10 +202,13 @@ app.post('/createAccount', (req, res)=>{
 });
 //////////////////////////////////////////
 //log in path
+app.get('/', (req, res) => {
+    res.render('login'); // renders the login.ejs file 
+})
 
-app.post('/login', passport.authenticate('local', {
+app.get('/login', passport.authenticate('local', {
     successRedirect :'/dashboard',
-    failureRedirect: '/login',
+    failureRedirect: '/createAccount'
 }), logIn);
 
 
