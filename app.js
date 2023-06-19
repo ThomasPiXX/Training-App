@@ -30,6 +30,26 @@ const bcrypt = require('bcryptjs');
 
 //passport 
 
+// Serialize the user object
+passport.serializeUser((user, done) => {
+    done(null, user.name); // Assuming the user has a unique identifier, you can change it to the appropriate field
+  });
+  
+  // Deserialize the user object
+  passport.deserializeUser((username, done) => {
+    db.get('SELECT * FROM users WHERE user_name = ?', [username], (error, row) => {
+      if (error) {
+        return done(error);
+      }
+      if (!row) {
+        return done(null, false);
+      }
+      const user = new User(row.user_name, row.user_age, row.user_password, row.user_exp, row.user_lvl);
+      return done(null, user);
+    });
+  });
+  
+
 passport.use(new LocalStrategy((username, password, done) => {
     db.get(logInQuery, [username, password], (error, row) =>{
         if(error) {
