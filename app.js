@@ -3,13 +3,10 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
+const port = 3000;
 const session = require('express-session');
-const port = 5000;
 app.use(express.urlencoded({extended: true}));
 app.use(express.static('public'));
-app.listen(port, () => {
-    console.log('server running on http: //localhost:${port}');
-});
 
 /////////////////////////
 //session config
@@ -48,7 +45,7 @@ passport.serializeUser((user, done) => {
       return done(null, user);
     });
   });
-  
+
 
 passport.use(new LocalStrategy((username, password, done) => {
     db.get(logInQuery, [username, password], (error, row) =>{
@@ -237,6 +234,10 @@ app.post('/userLevel', (req, res) =>{
         }
     });
 });
+
+
+
+///////////////////
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`)
