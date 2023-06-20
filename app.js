@@ -163,7 +163,7 @@ function logIn(req, res) {
                     throw err;
                 }
                 console.log('User has been serialized and added to the session');
-                return res.render('dashboard', { user });
+                res.redirect('/dashboard');
             });
 
         }
@@ -255,7 +255,7 @@ app.post('/userLevel', (req, res) =>{
 //dashboard route 
 
 app.get('/dashboard', (req, res) => {
-    res.render('dashboard');
+    res.render('dashboard',{ user: req.user});
 });
 
 ///////////////////
