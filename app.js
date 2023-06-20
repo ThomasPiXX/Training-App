@@ -131,14 +131,14 @@ function trainingTime(exerciceExp,exerciceTime, user){
 function passwordHasher(password, callback){
     //Generate a salt to use for hashing
     bcrypt.genSalt(10, (err, salt) =>{
-        if (err) throw err;
+        if (err) return callback(err);
 
         //hash the password using the generated salt 
         bcrypt.hash(password, salt, (err, hash) => {
-            if (err) throw err;
+            if (err) return callback(err);
 
             // invoke the callback
-            callback(hash)
+            callback(null, hash);
         })
     })
 }
@@ -174,7 +174,9 @@ function logIn(req, res) {
 //Acount creating form path
 
 //path
-
+app.get('/createAccount', (req, res) => {
+    res.render('createAccount');
+});
 
 app.post('/createAccount', (req, res)=>{
     const {username, password} = req.body;
@@ -190,24 +192,30 @@ app.post('/createAccount', (req, res)=>{
         //call passwordHasher
         passwordHasher(password, (hashedPassword) => {
             //Store the hashed password in the database
-            db.run("INSERT INTO users (username, password) VALUES (?, ?)", [username, hashedPassword], function(error){
+            db.run("INSERT INTO users (user_name, user_password) VALUES (?, ?)", [username, hashedPassword], function(error){
                 if (error) throw error;
 
                 console.log("User account added");
                 res.send("Acccount created succesfully");
             });
         });
+        res.render('dashboard');
     }
     });
 });
 //////////////////////////////////////////
 //log in path
-app.get('/', (req, res) => {
-    res.render('login'); // renders the login.ejs file 
-})
 
-app.get('/login', passport.authenticate('local', {
-    successRedirect :'/dashboard',
+app.get('/', (req, res) =>{
+    res.render('login');
+});
+
+app.get('/login', (req, res) => {
+    res.render('login');
+});
+
+app.post('/login', passport.authenticate('local', {
+    successRedirect: '/dashboard',
     failureRedirect: '/createAccount'
 }), logIn);
 
@@ -218,9 +226,9 @@ app.get('/login', passport.authenticate('local', {
 
 app.post('/userLevel', (req, res) =>{
     //getting UserID
-    const userId = req.session.user;
-    const userExperience = User.exp;
-    const userLvl = User.lvl;
+    const userId = req.user;
+    const userExperience = userId.exp;
+    const userLvl = userId.lvl;
     //getting the exerciceTime value 
     const {Time} = req.body;
     exerciceTime = Time;
@@ -243,7 +251,12 @@ app.post('/userLevel', (req, res) =>{
     });
 });
 
+//////////////////
+//dashboard route 
 
+app.get('/dashboard', (req, res) => {
+    res.render('dashboard');
+});
 
 ///////////////////
 
