@@ -142,67 +142,34 @@ function passwordHasher(password, callback){
         })
     })
 }
-//////////////////////////////////////////////////////
- //logIn function 
-function logIn(req, res) {
-    const { username } = req.body //get username and password from the form for middleware
-    
-    //check the Datebase for a row
-    db.run('SELECT * FROM users WHERE user_name = ?', [username], function(error, row) {
-        if(error) {
-            throw error;
-        }
-        if (!row) {
-            console.log('ther is now User with that name ')
-            return res.render('createAccount');
-        }
-        else{
-            const user = new User(row.user_name, row.user_exp, row.user_lvl);
-            req.login(user, (error) => {
-                if(err) {
-                    throw err;
-                }
-                console.log('User has been serialized and added to the session');
-                res.redirect('/dashboard');
-            });
-
-        }
-    })
-}
-
 /////////////////////////////////////////////////////
 //Acount creating form path
 
 //path
-app.get('/createAccount', (req, res) => {
-    res.render('createAccount');
-});
-
-app.post('/createAccount', (req, res)=>{
-    const {username, password} = req.body;
-    
-    //check if user already exist 
-    db.run("SELECT * FROM users WHERE user_name=?",[username], function(error, row) {
-    if(error) throw error;
-    
-    if(row) {
-        console.log('User already exist');
-        res.status(400).send('User already exist');
-    }else{
-        //call passwordHasher
+app.post('/createAccount', (req, res) => {
+    const { username, password } = req.body;
+  
+    // check if user already exists
+    db.run("SELECT * FROM users WHERE user_name=?", [username], function(error, row) {
+      if (error) throw error;
+  
+      if (row) {
+        console.log('User already exists');
+        res.status(400).send('User already exists');
+      } else {
+        // call passwordHasher
         passwordHasher(password, (hashedPassword) => {
-            //Store the hashed password in the database
-            db.run("INSERT INTO users (user_name, user_password) VALUES (?, ?)", [username, hashedPassword], function(error){
-                if (error) throw error;
-
-                console.log("User account added");
-                res.send("Acccount created succesfully");
-            });
+          // Store the hashed password in the database
+          db.run("INSERT INTO users (user_name, user_password) VALUES (?, ?)", [username, hashedPassword], function(error) {
+            if (error) throw error;
+            console.log("User account added");
+          });
         });
-        res.render('dashboard');
-    }
+      }
     });
-});
+  
+    res.render('dashboard'); 
+  });
 //////////////////////////////////////////
 //log in path
 
@@ -211,18 +178,19 @@ app.get('/', (req, res) =>{
 });
 
 app.get('/login', (req, res) => {
-    res.render('login');
+    res.render('createAccount');
 });
 
 app.post('/login', passport.authenticate('local', {
     successRedirect: '/dashboard',
     failureRedirect: '/createAccount'
-}), logIn);
+}));
 
 
 
 /////////////////////////////////////////////
 //Upadting user lvl
+
 
 app.post('/userLevel', (req, res) =>{
     //getting UserID
@@ -245,8 +213,7 @@ app.post('/userLevel', (req, res) =>{
             res.status(500).send('Error updating user level in the database');
         } else {
             console.log('SQL query executed successfully');
-            res.status(200).send('great job!');
-            return res.render('dashboard', {userId});
+            res.redirect('dashboard');
         }
     });
 });
