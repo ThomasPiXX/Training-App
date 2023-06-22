@@ -11,7 +11,7 @@
     <body>
         <div class ="container">
             <h2>Login Form</h2>
-            <form action="/login" method="get">
+            <form action="/login" method="post">
                 <div class="form-group">
                     <label for="username">Username</label>
                     <input type="text" id="username" name="username" class="login-input" placeholder="Enter your username" required>
@@ -20,10 +20,7 @@
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" class="login-input" placeholder="Enter your password" required>
                 </div>
-                <div class="form-group">
-                    <label for="age">Age</label>
-                    <input type="age" id="age" name="age" class="login-input" placeholder="Your age" required>
-                </div>
+            
                 <div class="form-group">
                     <button type="submit">Login</button>
                 </div>

@@ -63,7 +63,7 @@ passport.use(new LocalStrategy((username, password, done) => {
             return done(error);
         }
         if ( !row ) {
-            return done(null, false, {message : 'Incorect usernam or password'});
+            return done(null, false, {template: 'createAccount' });
         }
 
         const user = new User(row.user_name,row.user_age, row.user_password, row.user_exp, row.user_lvl);
@@ -75,11 +75,11 @@ passport.use(new LocalStrategy((username, password, done) => {
                 return done(error);
             }
             if (!isMatch) {
-               return done(null, false, {messsage : 'Incorrect username or password'});
+               return done(null, false, { template: 'createAccount'});
 
             }
              // Authentication successful
-            return done(null, user);
+             return done(null, user, {template: 'dashboard'});
             });
         });
     })
@@ -146,6 +146,9 @@ function passwordHasher(password, callback){
 //Acount creating form path
 
 //path
+app.get('/createAccount', (req, res) =>{
+    res.render('createAccount');
+})
 app.post('/createAccount', (req, res) => {
     const { username, password } = req.body;
   
@@ -159,16 +162,17 @@ app.post('/createAccount', (req, res) => {
       } else {
         // call passwordHasher
         passwordHasher(password, (hashedPassword) => {
+
+            securepass= hashedPassword
           // Store the hashed password in the database
-          db.run("INSERT INTO users (user_name, user_password) VALUES (?, ?)", [username, hashedPassword], function(error) {
+          db.run("INSERT INTO users (user_name, user_password) VALUES (?, ?)", [username, securepass], function(error) {
             if (error) throw error;
             console.log("User account added");
-          });
+            res.redirect('/dashboard');
+          });1
         });
       }
     });
-  
-    res.render('dashboard'); 
   });
 //////////////////////////////////////////
 //log in path
@@ -177,17 +181,10 @@ app.get('/', (req, res) =>{
     res.render('login');
 });
 
-app.get('/login', (req, res) => {
-    res.render('createAccount');
-});
-
 app.post('/login', passport.authenticate('local', {
-    successRedirect: '/dashboard',
-    failureRedirect: '/createAccount'
+    successRedirect: '/dashboard', // Redirect to the dashboard template on successful authentication
+    failureRedirect: '/createAccount' // Redirect to the createAccount template on failed authentication
 }));
-
-
-
 /////////////////////////////////////////////
 //Upadting user lvl
 
