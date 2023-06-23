@@ -129,6 +129,11 @@ function trainingTime(exerciceExp,exerciceTime, user){
 //hashing password function 
 
 function passwordHasher(password, callback){
+
+    if (!password) {
+        const error = new Error('Invalid password');
+        return callback(error);
+    }
     //Generate a salt to use for hashing
     bcrypt.genSalt(10, (err, salt) =>{
         if (err) return callback(err);
@@ -150,7 +155,7 @@ app.get('/createAccount', (req, res) =>{
     res.render('createAccount');
 })
 app.post('/createAccount', (req, res) => {
-    const { username, password } = req.body;
+    const { username, userPassword } = req.body;
   
     // check if user already exists
     db.run("SELECT * FROM users WHERE user_name=?", [username], function(error, row) {
@@ -161,15 +166,18 @@ app.post('/createAccount', (req, res) => {
         res.status(400).send('User already exists');
       } else {
         // call passwordHasher
-        passwordHasher(password, (hashedPassword) => {
-
-            securepass= hashedPassword
+        passwordHasher(userPassword, (error, hashedPassword) => {
+            if(error){
+                console.log('error hashing password', error);
+                res.status(500).send('Error hashing password');
+                return;
+            }
           // Store the hashed password in the database
-          db.run("INSERT INTO users (user_name, user_password) VALUES (?, ?)", [username, securepass], function(error) {
+          db.run("INSERT INTO users (user_name, user_password, user_lvl) VALUES (?, ?, ?)", [username, hashedPassword, 1], function(error) {
             if (error) throw error;
             console.log("User account added");
             res.redirect('/dashboard');
-          });1
+          });
         });
       }
     });
@@ -221,7 +229,13 @@ app.post('/userLevel', (req, res) =>{
 app.get('/dashboard', (req, res) => {
     res.render('dashboard',{ user: req.user});
 });
+//////////////////////////////
+// log out path 
 
+app.get('/logout', (req, res) =>{
+    res.render('login');
+    
+}) 
 ///////////////////
 
 app.listen(port, () => {
