@@ -14,7 +14,7 @@ const sqlite3 = require('sqlite3');;
 const db = new sqlite3.Database('users.db');
 const insertQuery = 'INSERT INTO users (user_name, user_age, user_password) VALUES (?, ?, ?)';
 const updateLvl = 'UPDATE users SET user_exp = ?, user_lvl = ? WHERE user_name = ?';
-const logInQuery ='SELECT user_name, user_password FROM users WHERE user_name = ? AND user_password = ?'
+const logInQuery ='SELECT * FROM users WHERE user_name = ? AND user_password = ?';
 
 /////////////////////////
 //session config
@@ -44,60 +44,50 @@ passport.serializeUser((user, done) => {
   
   // Deserialize the user object
   passport.deserializeUser((username, done) => {
-    db.get('SELECT * FROM users WHERE user_name = ?', [username], (error, row) => {
+    db.get('SELECT * FROM users WHERE user_name = ?', [username.user_name], (error, row) => {
       if (error) {
         return done(error);
       }
       if (!row) {
         return done(null, false);
       }
-      const user = new User(row.user_name, row.user_age, row.user_password, row.user_exp, row.user_lvl);
       return done(null, user);
     });
   });
 
 
-passport.use(new LocalStrategy((username, password, done) => {
-    db.get(logInQuery, [username, password], (error, row) =>{
-        if(error) {
-            return done(error);
+  passport.use(new LocalStrategy((username, password, done) => {
+    db.get(`SELECT * FROM users WHERE user_name = '${username}'`, (error, rows) => {
+      if (error) {
+        return done(error);
+      }
+      console.log('rows:', rows);
+      console.log('rows.length:', rows.length);
+      console.log('before the !ROW');
+      if (!rows) {
+        console.log('inside the row');
+        return done(null, false, { template: 'createAccount' });
+      }
+  
+      console.log('after !row');
+  
+      bcrypt.compare(password, rows[0].user_password, (error, isMatch) => {
+        if (error) {
+          return done(error);
         }
-        if ( !row ) {
-            return done(null, false, {template: 'createAccount' });
+        console.log(isMatch); // Log the result of the password comparison
+        if (!isMatch) {
+          return done(null, false, { template: 'createAccount' });
         }
-
-        const user = new User(row.user_name,row.user_age, row.user_password, row.user_exp, row.user_lvl);
-        
-        // Compare the provided password with the hashed password stored in the user object
-
-        bcrypt.compare(password, user.password, (error, isMatch) => {
-            if(error){
-                return done(error);
-            }
-            if (!isMatch) {
-               return done(null, false, { template: 'createAccount'});
-
-            }
-             // Authentication successful
-             return done(null, user, {template: 'dashboard'});
-            });
-        });
-    })
-);
-
-//initialize Passport and session middleware
-app.use(passport.initialize());
-app.use(passport.session());
-
-
-
-
+        return done(null, user, { template: 'dashboard' });
+      });
+    });
+  }));
 //////////////////////////////////////////////////////////////////
 //user model
 class User {
-    constructor(name, age, password, exp = 0, lvl = 0){
+    constructor(name, password, exp = 0, lvl = 0){
         this.name = name;
-        this.age = age;
         this.password = password;
         this.exp = exp;
         this.lvl = lvl;
@@ -158,7 +148,7 @@ app.post('/createAccount', (req, res) => {
     const { username, userPassword } = req.body;
   
     // check if user already exists
-    db.run("SELECT * FROM users WHERE user_name=?", [username], function(error, row) {
+    db.get("SELECT * FROM users WHERE user_name=?", [username], function(error, row) {
       if (error) throw error;
   
       if (row) {
@@ -173,7 +163,7 @@ app.post('/createAccount', (req, res) => {
                 return;
             }
           // Store the hashed password in the database
-          db.run("INSERT INTO users (user_name, user_password, user_lvl) VALUES (?, ?, ?)", [username, hashedPassword, 1], function(error) {
+          db.run("INSERT INTO users (user_name, user_password,user_exp, user_lvl) VALUES (?, ?, ?, ?)", [username, hashedPassword, 0, 0], function(error) {
             if (error) throw error;
             console.log("User account added");
             res.redirect('/dashboard');
@@ -189,10 +179,22 @@ app.get('/', (req, res) =>{
     res.render('login');
 });
 
-app.post('/login', passport.authenticate('local', {
-    successRedirect: '/dashboard', // Redirect to the dashboard template on successful authentication
-    failureRedirect: '/createAccount' // Redirect to the createAccount template on failed authentication
-}));
+app.post('/login', (req, res, next) => {
+    passport.authenticate('local', (error, user, info) => {
+      if (error) {
+        return next(error);
+      }
+      if (!user) {
+        return res.redirect('/createAccount');
+      }
+      req.login(user, (error) => {
+        if (error) {
+          return next(error);
+        }
+        return res.redirect('/dashboard');
+      });
+    })(req, res, next);
+  });
 /////////////////////////////////////////////
 //Upadting user lvl
 
