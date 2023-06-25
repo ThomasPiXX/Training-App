@@ -55,7 +55,7 @@ passport.serializeUser((user, done) => {
     });
   });
 
-
+//strategy
   passport.use(new LocalStrategy((username, password, done) => {
     db.get(`SELECT * FROM users WHERE user_name = '${username}'`, (error, rows) => {
       if (error) {
