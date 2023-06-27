@@ -39,7 +39,7 @@ const bcrypt = require('bcryptjs');
 
 // Serialize the user object
 passport.serializeUser((user, done) => {
-    done(null, user.name); // Assuming the user has a unique identifier, you can change it to the appropriate field
+    done(null, user.user_name); // Assuming the user has a unique identifier, you can change it to the appropriate field
   });
   
   // Deserialize the user object
@@ -51,6 +51,7 @@ passport.serializeUser((user, done) => {
       if (!row) {
         return done(null, false);
       }
+      const user = new User(row.user_name, row.user_exp, row.user_lvl);
       return done(null, user);
     });
   });
@@ -71,7 +72,7 @@ passport.serializeUser((user, done) => {
   
       console.log('after !row');
   
-      bcrypt.compare(password, rows[0].user_password, (error, isMatch) => {
+      bcrypt.compare(password, rows.user_password, (error, isMatch) => {
         if (error) {
           return done(error);
         }
@@ -79,7 +80,7 @@ passport.serializeUser((user, done) => {
         if (!isMatch) {
           return done(null, false, { template: 'createAccount' });
         }
-        return done(null, user, { template: 'dashboard' });
+        return done(null, rows ,{ template: 'dashboard' });
       });
     });
   }));
