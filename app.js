@@ -10,12 +10,24 @@ app.use(express.static('public'));
 
 ///////////////////////////////////////////
 //sqlite connection 
-const sqlite3 = require('sqlite3');;
+const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database('users.db');
 const insertQuery = 'INSERT INTO users (user_name, user_age, user_password) VALUES (?, ?, ?)';
 const updateLvl = 'UPDATE users SET user_exp = ?, user_lvl = ? WHERE user_name = ?';
 const logInQuery ='SELECT * FROM users WHERE user_name = ? AND user_password = ?';
 
+
+/////////////////////////
+//user model
+
+class User {
+  constructor(name, password, exp = 0, lvl = 0){
+      this.name = name;
+      this.password = password;
+      this.exp = exp;
+      this.lvl = lvl;
+  }
+}
 /////////////////////////
 //session config
 app.use(session({
@@ -39,28 +51,32 @@ const bcrypt = require('bcryptjs');
 
 // Serialize the user object
 passport.serializeUser((user, done) => {
-    done(null, user.user_name); // Assuming the user has a unique identifier, you can change it to the appropriate field
+  console.log('Serialized user:', user);
+  done(null, user.user_name); // Assuming the user has a unique identifier, you can change it to the appropriate field
   });
   
   // Deserialize the user object
-  passport.deserializeUser((username, done) => {
-    db.get('SELECT * FROM users WHERE user_name = ?', [username], (error, row) => {
+  passport.deserializeUser((user, done) => {
+    db.get('SELECT * FROM users WHERE user_name = ?', [user], (error, row) => {
       if (error) {
         return done(error);
       }
       if (!row) {
         return done(null, false);
       }
-      const user = new User(row.user_name, row.user_password, row.user_exp, row.user_lvl);
+      const user = {
+        name: row.user_name,
+        lvl: row.user_lvl,
+        exp: row.user_exp
+      };
       console.log('Deserialized User:', user);
       return done(null, user);
     });
   });
-  
-
+///////////////////////////////////////////////
 //strategy
   passport.use(new LocalStrategy((username, password, done) => {
-    db.get(`SELECT * FROM users WHERE user_name = '${username}'`, (error, rows) => {
+    db.get("SELECT * FROM users WHERE user_name = ?",[username], (error, rows) => {
       if (error) {
         return done(error);
       }
@@ -81,15 +97,7 @@ passport.serializeUser((user, done) => {
     });
   }));
 //////////////////////////////////////////////////////////////////
-//user model
-class User {
-    constructor(name, password, exp = 0, lvl = 0){
-        this.name = name;
-        this.password = password;
-        this.exp = exp;
-        this.lvl = lvl;
-    }
-}
+
 ////////////////////////////////////////////////////
 // lvl up function 
 function lvlUp(user){
@@ -110,7 +118,7 @@ const exerciceExp = 1;
 function trainingTime(exerciceExp,exerciceTime, user){
     let total = exerciceExp * exerciceTime;
     user.exp = total;
-    return lvlUp(user.exp) ;
+    return lvlUp(user) ;
 }
 //////////////////////////////////////////////////////
 //hashing password function 
@@ -176,6 +184,10 @@ app.get('/', (req, res) =>{
     res.render('login');
 });
 
+app.get('/login', (req, res) => {
+  res.render('login');
+});
+
 app.post('/login', (req, res, next) => {
     passport.authenticate('local', (error, user, info) => {
       if (error) {
@@ -207,7 +219,7 @@ app.post('/userLevel', (req, res) =>{
     
     
     //calling the lvl updater 
-    trainingTime(exerciceTime, exerciceExp);
+    trainingTime(exerciceExp, exerciceTime);
 
     console.log('lvl up as been executed properly');
     //adding user lvl and experience to Database
@@ -225,8 +237,12 @@ app.post('/userLevel', (req, res) =>{
 //////////////////
 //dashboard route 
 app.get('/dashboard', (req, res) => {
-  console.log('User', user);
-  res.render('dashboard', { user: req.user });
+  if (req.user) {
+    const user = req.user;
+    res.render('dashboard', { user });
+  } else {
+    res.redirect('/login');
+  }
 });
 
 
