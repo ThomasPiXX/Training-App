@@ -56,8 +56,8 @@ passport.serializeUser((user, done) => {
   });
   
   // Deserialize the user object
-  passport.deserializeUser((user, done) => {
-    db.get('SELECT * FROM users WHERE user_name = ?', [user], (error, row) => {
+  passport.deserializeUser((username, done) => {
+    db.get('SELECT * FROM users WHERE user_name = ?', [username], (error, row) => {
       if (error) {
         return done(error);
       }
