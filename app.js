@@ -44,17 +44,19 @@ passport.serializeUser((user, done) => {
   
   // Deserialize the user object
   passport.deserializeUser((username, done) => {
-    db.get('SELECT * FROM users WHERE user_name = ?', [username.user_name], (error, row) => {
+    db.get('SELECT * FROM users WHERE user_name = ?', [username], (error, row) => {
       if (error) {
         return done(error);
       }
       if (!row) {
         return done(null, false);
       }
-      const user = new User(row.user_name, row.user_exp, row.user_lvl);
+      const user = new User(row.user_name, row.user_password, row.user_exp, row.user_lvl);
+      console.log('Deserialized User:', user);
       return done(null, user);
     });
   });
+  
 
 //strategy
   passport.use(new LocalStrategy((username, password, done) => {
@@ -62,16 +64,10 @@ passport.serializeUser((user, done) => {
       if (error) {
         return done(error);
       }
-      console.log('rows:', rows);
-      console.log('rows.length:', rows.length);
-      console.log('before the !ROW');
       if (!rows) {
-        console.log('inside the row');
         return done(null, false, { template: 'createAccount' });
       }
-  
-      console.log('after !row');
-  
+
       bcrypt.compare(password, rows.user_password, (error, isMatch) => {
         if (error) {
           return done(error);
@@ -228,10 +224,12 @@ app.post('/userLevel', (req, res) =>{
 
 //////////////////
 //dashboard route 
-
 app.get('/dashboard', (req, res) => {
-    res.render('dashboard',{ user: req.user});
+  console.log('User', user);
+  res.render('dashboard', { user: req.user });
 });
+
+
 //////////////////////////////
 // log out path 
 

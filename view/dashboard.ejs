@@ -10,12 +10,12 @@
         <link rel="stylesheet" href="">
     </head>
     <body>
-        <h1>Welcome, &lt;%= username %> to your Dashboard!</h1>
+        <h1>Welcome, <%= user.name %> to your Dashboard!</h1>
         <h2>User Information</h2>
-        <p>Name: <span id="username">&lt;%= username %></span></p>
-        <p>Level: <span id="userlevel">&lt;%= userlevel %></span></p>
-        <p>Experience: <span id="userexp">&lt;%= userexp %></span></p>
-        
+        <p>Name: <%= user.name %></p>
+        <p>Level: <%= user.lvl %></p>
+        <p>Experience: <%= user.exp %></p>
+
         <h2>Enter Training Time</h2>
         <form action="/userLevel" id="Time" method="post">
             <label for="trainingForm">Training Time</label>
