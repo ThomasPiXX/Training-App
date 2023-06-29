@@ -47,7 +47,9 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
 const bcrypt = require('bcryptjs');
 
-//passport 
+// Passport configuration
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Serialize the user object
 passport.serializeUser((user, done) => {
