@@ -251,6 +251,8 @@ app.get('/dashboard', (req, res) => {
 //////////////////////////////
 // log out path 
 
+// clear session 
+
 app.get('/logout', (req, res) =>{
     res.render('login');
     
