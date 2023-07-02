@@ -16,10 +16,14 @@
     <p>Experience: <%= user.exp %></p>
 
     <h2>Enter Training Time</h2>
-    <form action="/userLevel" id="Time" method="post">
+    <form action="/userLevel" id="Time" method="POST">
       <label for="trainingForm">Training Time</label>
       <input type="number" id="Time" name="trainingTime" required>
       <button type="submit">Submit</button>
+    </form>
+    <h3>logout</h3>
+    <form action="/logout" id="logout" method="post">
+      <button type="logout">logout</button>
     </form>
     <script src="c:\Users\tommy\OneDrive\Bureau\#\Training App" async defer></script>
   </body>

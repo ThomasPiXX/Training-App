@@ -7,7 +7,6 @@ const port = 3000;
 const session = require('express-session');
 app.use(express.urlencoded({extended: true}));
 app.use(express.static('public'));
-
 ///////////////////////////////////////////
 //sqlite connection 
 const sqlite3 = require('sqlite3');
@@ -15,7 +14,6 @@ const db = new sqlite3.Database('users.db');
 const insertQuery = 'INSERT INTO users (user_name, user_age, user_password) VALUES (?, ?, ?)';
 const updateLvl = 'UPDATE users SET user_exp = ?, user_lvl = ? WHERE user_name = ?';
 const logInQuery ='SELECT * FROM users WHERE user_name = ? AND user_password = ?';
-
 
 /////////////////////////
 //user model
@@ -39,9 +37,6 @@ app.use(session({
 app.set('view engine', 'ejs');
 const path = require('path');
 app.set('views', path.join(__dirname, 'view'));
-
-
-
 //passport connection;
 const passport = require('passport');
 const LocalStrategy = require('passport-local').Strategy;
@@ -98,8 +93,6 @@ passport.serializeUser((user, done) => {
       });
     });
   }));
-//////////////////////////////////////////////////////////////////
-
 ////////////////////////////////////////////////////
 // lvl up function 
 function lvlUp(user){
@@ -146,10 +139,8 @@ function passwordHasher(password, callback){
 }
 /////////////////////////////////////////////////////
 //Acount creating form path
-
-//path
 app.get('/createAccount', (req, res) =>{
-    res.render('createAccount');
+  res.render('createAccount');
 })
 app.post('/createAccount', (req, res) => {
     const { username, userPassword } = req.body;
@@ -183,7 +174,7 @@ app.post('/createAccount', (req, res) => {
 //log in path
 
 app.get('/', (req, res) =>{
-    res.render('login');
+  res.render('login');
 });
 
 app.get('/login', (req, res) => {
@@ -249,15 +240,17 @@ app.get('/dashboard', (req, res) => {
 
 
 //////////////////////////////
-// log out path 
+// log out path
+app.post('/logout',(req, res) => {
+  req.logout(function(err){
+    if(err){
+      console.log(err);
+    }
+  })
+  console.log(req.user)
+  res.render('login');
 
-// clear session 
-
-app.get('/logout', (req, res) =>{
-    res.render('login');
-    
-}) 
-///////////////////
+});
 
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`)
