@@ -98,22 +98,27 @@ passport.serializeUser((user, done) => {
       });
     });
   }));
-////////////////////////////////////////////////////
-// lvl up function 
-function lvlUp(user){
-    while(user.exp >= 10){
-    const remExp = user.exp - 10;
-    user.exp = remExp;
-    user.lvl++;
-    };
-}
-
 /////////////////////////////////////////////////////
 //training function 
-function trainingTime(exerciceExp,exerciceTime, user){
-    let total = exerciceExp * exerciceTime;
-    user.exp = total;
-    return lvlUp(user) ;
+function trainingTime(exerciseExp, exerciseTime, user, req) {
+  console.log('exerciseTime:', exerciseTime);
+  console.log('user before update:', user);
+
+  let expAmount = exerciseExp * exerciseTime;
+  user.userExp = expAmount;
+  
+  while(expAmount >= 10){
+    user.userExp -= 10;
+    user.userLvl += 1;
+    expAmount -= 10;
+  };
+  console.log('user after update:', user);
+
+  // Update the req.user object (session)
+  req.user.exp = user.userExp;
+  req.user.lvl = user.userLvl;
+
+  return user;
 }
 //////////////////////////////////////////////////////
 //hashing password function 
@@ -199,36 +204,36 @@ app.post('/login', (req, res, next) => {
   });
 /////////////////////////////////////////////
 //Upadting user lvl
-
-
-app.post('/userLevel', (req, res) =>{
-    //getting UserID
-  if(req.user) {
-    const user = {
-      name: req.user.name,
-      lvl: req.user.lvl,
-      exp: req.user.exp
+app.post('/userLevel', (req, res) => {
+  if (req.user) {
+    let user = {
+      userName: req.user.name,
+      userLvl: req.user.lvl,
+      userExp: req.user.exp || 0
     };
-  }
-    //getting the exerciceTime value 
-    const {Time} = req.body;
-    exerciceTime = Time;
-    
-    
-    //calling the lvl updater 
-    trainingTime(exerciceExp, exerciceTime);
 
-    console.log('lvl up as been executed properly');
-    //adding user lvl and experience to Database
-    db.run(updateLvl, [userName, userExp, userLvl], (err) => {
-        if(err) {
-            console.error('Error updating user level in the database:', err);
-            res.status(500).send('Error updating user level in the database');
-        } else {
-            console.log('SQL query executed successfully');
-            res.redirect('dashboard');
-        }
+    // Getting the exerciseTime value
+    const { Time } = req.body;
+    const exerciseTime = parseInt(Time);
+    const exerciseExp = 1;
+
+    // Calling the lvl updater
+    user = trainingTime(exerciseExp, exerciseTime, user, req);
+
+    console.log(user);
+    console.log('Level up has been executed properly');
+
+    // Adding user lvl and experience to the database
+    db.run(updateLvl, [user.userName, user.userExp, user.userLvl], (err) => {
+      if (err) {
+        console.error('Error updating user level in the database:', err);
+        res.status(500).send('Error updating user level in the database');
+      } else {
+        console.log('SQL query executed successfully');
+        res.redirect('dashboard');
+      }
     });
+  }
 });
 
 //////////////////
