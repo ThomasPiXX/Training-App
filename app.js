@@ -1,3 +1,20 @@
+/////////////////////////
+//user model
+class User {
+  constructor(name, password, exp = 0, lvl = 0){
+      this.name = name;
+      this.password = password;
+      this.exp = exp;
+      this.lvl = lvl;
+  }
+}
+///////////////////////////////////////////
+//sqlite connection 
+const sqlite3 = require('sqlite3');
+const db = new sqlite3.Database('users.db');
+const insertQuery = 'INSERT INTO users (user_name, user_age, user_password) VALUES (?, ?, ?)';
+const updateLvl = 'UPDATE users SET user_exp = ?, user_lvl = ? WHERE user_name = ?';
+const logInQuery ='SELECT * FROM users WHERE user_name = ? AND user_password = ?';
 /////////////////////////////////////
 // express connection 
 const express = require('express');
@@ -7,25 +24,13 @@ const port = 3000;
 const session = require('express-session');
 app.use(express.urlencoded({extended: true}));
 app.use(express.static('public'));
+/////////////////////////////////////////////////////
+// user body-parser middleware with extended option
+app.use(bodyParser.urlencoded({ extended: true}));
+app.use(bodyParser.json());
 ///////////////////////////////////////////
-//sqlite connection 
-const sqlite3 = require('sqlite3');
-const db = new sqlite3.Database('users.db');
-const insertQuery = 'INSERT INTO users (user_name, user_age, user_password) VALUES (?, ?, ?)';
-const updateLvl = 'UPDATE users SET user_exp = ?, user_lvl = ? WHERE user_name = ?';
-const logInQuery ='SELECT * FROM users WHERE user_name = ? AND user_password = ?';
+//csurf mid
 
-/////////////////////////
-//user model
-
-class User {
-  constructor(name, password, exp = 0, lvl = 0){
-      this.name = name;
-      this.password = password;
-      this.exp = exp;
-      this.lvl = lvl;
-  }
-}
 /////////////////////////
 //session config
 app.use(session({
@@ -102,14 +107,9 @@ function lvlUp(user){
     user.lvl++;
     };
 }
-/////////////////////////////////////////////////////
-// user body-parser middleware with extended option
-app.use(bodyParser.urlencoded({ extended: true}));
-app.use(bodyParser.json());
+
 /////////////////////////////////////////////////////
 //training function 
-const exerciceExp = 1;
-
 function trainingTime(exerciceExp,exerciceTime, user){
     let total = exerciceExp * exerciceTime;
     user.exp = total;
@@ -203,9 +203,13 @@ app.post('/login', (req, res, next) => {
 
 app.post('/userLevel', (req, res) =>{
     //getting UserID
-    const userId = req.user;
-    const userExperience = userId.exp;
-    const userLvl = userId.lvl;
+  if(req.user) {
+    const user = {
+      name: req.user.name,
+      lvl: req.user.lvl,
+      exp: req.user.exp
+    };
+  }
     //getting the exerciceTime value 
     const {Time} = req.body;
     exerciceTime = Time;
@@ -216,7 +220,7 @@ app.post('/userLevel', (req, res) =>{
 
     console.log('lvl up as been executed properly');
     //adding user lvl and experience to Database
-    db.run(updateLvl, [userId, userExperience, userLvl], (err) => {
+    db.run(updateLvl, [userName, userExp, userLvl], (err) => {
         if(err) {
             console.error('Error updating user level in the database:', err);
             res.status(500).send('Error updating user level in the database');
