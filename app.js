@@ -16,7 +16,7 @@ const insertQuery = 'INSERT INTO users (user_name, user_age, user_password) VALU
 const updateLvl = 'UPDATE users SET user_exp = ?, user_lvl = ? WHERE user_name = ?';
 const logInQuery ='SELECT * FROM users WHERE user_name = ? AND user_password = ?';
 /////////////////////////////////////
-// express connection 
+// express connection
 const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
@@ -106,12 +106,12 @@ function trainingTime(exerciseExp, exerciseTime, user, req, res) {
   console.log('user before update:', user);
 
   let expAmount = exerciseExp * exerciseTime;
-  user.userExp = expAmount;
+  user.userExp += expAmount;
 
   while (expAmount >= 10) {
-    user.userExp -= 10;
-    user.userLvl += 1;
-    expAmount -= 10;
+    user.userExp = user.userExp - 10;
+    user.userLvl = user.userLvl + 1;
+    expAmount = expAmount - 10;
   }
   console.log('user after update:', user);
 
