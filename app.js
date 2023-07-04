@@ -1,20 +1,7 @@
-/////////////////////////
-//user model
-class User {
-  constructor(name, password, exp = 0, lvl = 0){
-      this.name = name;
-      this.password = password;
-      this.exp = exp;
-      this.lvl = lvl;
-  }
-}
 ///////////////////////////////////////////
 //sqlite connection 
 const sqlite3 = require('sqlite3');
 const db = new sqlite3.Database('users.db');
-const insertQuery = 'INSERT INTO users (user_name, user_age, user_password) VALUES (?, ?, ?)';
-const updateLvl = 'UPDATE users SET user_exp = ?, user_lvl = ? WHERE user_name = ?';
-const logInQuery ='SELECT * FROM users WHERE user_name = ? AND user_password = ?';
 /////////////////////////////////////
 // express connection
 const express = require('express');
