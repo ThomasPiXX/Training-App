@@ -100,23 +100,38 @@ passport.serializeUser((user, done) => {
   }));
 /////////////////////////////////////////////////////
 //training function 
-function trainingTime(exerciseExp, exerciseTime, user, req) {
+//training function 
+function trainingTime(exerciseExp, exerciseTime, user, req, res) {
   console.log('exerciseTime:', exerciseTime);
   console.log('user before update:', user);
 
   let expAmount = exerciseExp * exerciseTime;
   user.userExp = expAmount;
-  
-  while(expAmount >= 10){
+
+  while (expAmount >= 10) {
     user.userExp -= 10;
     user.userLvl += 1;
     expAmount -= 10;
-  };
+  }
   console.log('user after update:', user);
 
   // Update the req.user object (session)
   req.user.exp = user.userExp;
   req.user.lvl = user.userLvl;
+  console.log(user);
+  console.log('Level up has been executed properly');
+
+  // Adding user lvl and experience to the database
+  const updateLvl = 'UPDATE users SET user_lvl = ?, user_exp = ? WHERE user_name = ?';
+  db.run(updateLvl, [user.userLvl, user.userExp, user.userName], (err) => {
+    if (err) {
+      console.error('Error updating user level in the database:', err);
+      res.status(500).send('Error updating user level in the database');
+    } else {
+      console.log('SQL query executed successfully');
+      res.redirect('dashboard');
+    }
+  });
 
   return user;
 }
@@ -218,21 +233,8 @@ app.post('/userLevel', (req, res) => {
     const exerciseExp = 1;
 
     // Calling the lvl updater
-    user = trainingTime(exerciseExp, exerciseTime, user, req);
+    user = trainingTime(exerciseExp, exerciseTime, user, req, res);
 
-    console.log(user);
-    console.log('Level up has been executed properly');
-
-    // Adding user lvl and experience to the database
-    db.run(updateLvl, [user.userName, user.userExp, user.userLvl], (err) => {
-      if (err) {
-        console.error('Error updating user level in the database:', err);
-        res.status(500).send('Error updating user level in the database');
-      } else {
-        console.log('SQL query executed successfully');
-        res.redirect('dashboard');
-      }
-    });
   }
 });
 
