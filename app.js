@@ -22,14 +22,36 @@ const bodyParser = require('body-parser');
 const app = express();
 const port = 3000;
 const session = require('express-session');
-app.use(express.urlencoded({extended: true}));
+const cookieParser = require('cookie-parser');
+
+app.use(express.urlencoded({ extended: false }));
 app.use(express.static('public'));
+app.use(cookieParser());
 /////////////////////////////////////////////////////
 // user body-parser middleware with extended option
 app.use(bodyParser.urlencoded({ extended: true}));
 app.use(bodyParser.json());
 ///////////////////////////////////////////
 //csurf mid
+const csrfProtection = csrf({ 
+  cookie: {
+    key: '_csrf-my-app',
+    path: '/',
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 3600 // 1hour
+}});
+
+const csrfProtMid = (req, res, next) => {
+  //apply CSRF protection only on POST requests
+  if (req.method === 'POST') {
+    // add CSRF protection middleware
+    return csrfProtection(req, res, next);
+  }
+  next();
+}
+
+app.use(csrfProtMid);
 
 /////////////////////////
 //session config
