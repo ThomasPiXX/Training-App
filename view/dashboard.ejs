@@ -17,6 +17,7 @@
 
     <h2>Enter Training Time</h2>
     <form action="/userLevel" id="Time" method="POST">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">      
       <label for="trainingForm">Training Time</label>
       <input type="number" id="Time" name="Time" required>
       <button type="submit">Submit</button>

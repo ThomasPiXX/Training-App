@@ -11,7 +11,7 @@ const port = 3000;
 const session = require('express-session');
 const cookieParser = require('cookie-parser');
 
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use(cookieParser());
 /////////////////////////////////////////////////////
@@ -19,7 +19,8 @@ app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: true}));
 app.use(bodyParser.json());
 ///////////////////////////////////////////
-//csurf mid
+//csurf mid cookie config
+const csrf = require('csurf');
 const csrfProtection = csrf({ 
   cookie: {
     key: '_csrf-my-app',
@@ -28,7 +29,7 @@ const csrfProtection = csrf({
     secure: process.env.NODE_ENV === 'production',
     maxAge: 3600 // 1hour
 }});
-
+//csurf midd only for post 
 const csrfProtMid = (req, res, next) => {
   //apply CSRF protection only on POST requests
   if (req.method === 'POST') {
@@ -37,15 +38,14 @@ const csrfProtMid = (req, res, next) => {
   }
   next();
 }
-
-app.use(csrfProtMid);
+app.use(csrfProtection);
 
 /////////////////////////
 //session config
 app.use(session({
     secret:'your-secret-key',
-    resave: false,
-    saveUninitialized: false
+    resave: true,
+    saveUninitialized: true
 }));
 // Set view engine
 app.set('view engine', 'ejs');
@@ -169,7 +169,8 @@ function passwordHasher(password, callback){
 /////////////////////////////////////////////////////
 //Acount creating form path
 app.get('/createAccount', (req, res) =>{
-  res.render('createAccount');
+  const csrfToken = req.csrfToken();
+  res.render('createAccount', { csrfToken });
 })
 app.post('/createAccount', (req, res) => {
     const { username, userPassword } = req.body;
@@ -203,11 +204,13 @@ app.post('/createAccount', (req, res) => {
 //log in path
 
 app.get('/', (req, res) =>{
-  res.render('login');
+  const csrfToken = req.csrfToken();
+  res.render('login', { csrfToken });
 });
 
 app.get('/login', (req, res) => {
-  res.render('login');
+  const csrfToken = req.csrfToken(); // Generate CSRF token
+  res.render('login', { csrfToken });
 });
 
 app.post('/login', (req, res, next) => {
@@ -235,24 +238,21 @@ app.post('/userLevel', (req, res) => {
       userLvl: req.user.lvl,
       userExp: req.user.exp || 0
     };
-
     // Getting the exerciseTime value
     const { Time } = req.body;
     const exerciseTime = parseInt(Time);
     const exerciseExp = 1;
-
     // Calling the lvl updater
     user = trainingTime(exerciseExp, exerciseTime, user, req, res);
-
   }
 });
-
 //////////////////
 //dashboard route 
 app.get('/dashboard', (req, res) => {
   if (req.user) {
+    const csrfToken = req.csrfToken();
     const user = req.user;
-    res.render('dashboard', { user });
+    res.render('dashboard', { user , csrfToken });
   } else {
     res.redirect('/login');
   }
