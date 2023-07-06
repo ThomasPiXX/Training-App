@@ -44,8 +44,8 @@ app.use(csrfProtection);
 //session config
 app.use(session({
     secret:'your-secret-key',
-    resave: true,
-    saveUninitialized: true
+    resave: false,
+    saveUninitialized: false
 }));
 // Set view engine
 app.set('view engine', 'ejs');
