@@ -41,9 +41,21 @@ const csrfProtMid = (req, res, next) => {
 app.use(csrfProtection);
 
 /////////////////////////
+//secret key for session
+const crypto = require('crypto');
+
+// Generate a random secret key
+function generateSecretKey() {
+  const secretKey = crypto.randomBytes(32).toString('hex');
+  return secretKey;
+}
+
+// Example usage
+const secretKey = generateSecretKey();
+
 //session config
 app.use(session({
-    secret:'your-secret-key',
+    secret: secretKey,
     resave: false,
     saveUninitialized: false
 }));
