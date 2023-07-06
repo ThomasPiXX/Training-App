@@ -273,15 +273,15 @@ app.get('/dashboard', (req, res) => {
 
 //////////////////////////////
 // log out path
-app.post('/logout',(req, res) => {
-  req.logout(function(err){
-    if(err){
+app.get('/logout',(req, res) => {
+  const csrfToken = req.csrfToken();
+  req.logout(function(err) {
+    if(err) {
       console.log(err);
     }
-  })
+  });
   console.log(req.user)
-  res.render('login');
-
+  res.render('login', { csrfToken });
 });
 
 app.listen(port, () => {
