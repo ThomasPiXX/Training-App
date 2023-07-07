@@ -29,16 +29,6 @@ const csrfProtection = csrf({
     secure: process.env.NODE_ENV === 'production',
     maxAge: 3600 // 1hour
 }});
-//csurf midd only for post 
-const csrfProtMid = (req, res, next) => {
-  //apply CSRF protection only on POST requests
-  if (req.method === 'POST') {
-    // add CSRF protection middleware
-    return csrfProtection(req, res, next);
-  }
-  next();
-}
-app.use(csrfProtection);
 
 /////////////////////////
 //secret key for session
