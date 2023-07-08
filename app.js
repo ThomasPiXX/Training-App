@@ -273,7 +273,12 @@ app.get('/logout',(req, res) => {
   console.log(req.user)
   res.render('login', { csrfToken });
 });
-
+//////////////////////
+//create account bottom on the login ejs file
+app.get('/create', (req, res) => {
+  const csrfToken = req.csrfToken();
+  res.render('createAccount', {csrfToken});
+})
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`)
 });

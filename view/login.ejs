@@ -25,6 +25,11 @@
                     <button type="submit">Login</button>
                 </div>
             </form>
+            <h3>Create account</h3>
+            <form action="/create" id="create" method="get">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <button type="submit">create</button>
+            </form>
         </div>
         <script src="app.js"></script>
     </body>
