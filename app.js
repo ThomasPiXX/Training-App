@@ -29,7 +29,7 @@ const csrfProtection = csrf({
     secure: process.env.NODE_ENV === 'production',
     maxAge: 3600 // 1hour
 }});
-
+app.use(csrfProtection);
 /////////////////////////
 //secret key for session
 const crypto = require('crypto');
