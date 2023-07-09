@@ -279,6 +279,8 @@ app.get('/create', (req, res) => {
   const csrfToken = req.csrfToken();
   res.render('createAccount', {csrfToken});
 })
+
+//start the app/server listening upcoming request
 app.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`)
 });
