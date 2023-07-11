@@ -5,7 +5,6 @@ const db = new sqlite3.Database('users.db');
 /////////////////////////////////////
 // express connection
 const express = require('express');
-const bodyParser = require('body-parser');
 const app = express();
 const port = 3000;
 const session = require('express-session');
@@ -14,10 +13,7 @@ const cookieParser = require('cookie-parser');
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
 app.use(cookieParser());
-/////////////////////////////////////////////////////
-// user body-parser middleware with extended option
-app.use(bodyParser.urlencoded({ extended: true}));
-app.use(bodyParser.json());
+app.use(express.json());
 ///////////////////////////////////////////
 //csurf mid cookie config
 const csrf = require('csurf');
