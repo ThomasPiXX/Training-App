@@ -35,13 +35,9 @@ function generateSecretKey() {
   const secretKey = crypto.randomBytes(32).toString('hex');
   return secretKey;
 }
-
-// Example usage
-const secretKey = generateSecretKey();
-
 //session config
 app.use(session({
-    secret: secretKey,
+    secret: generateSecretKey(),
     resave: false,
     saveUninitialized: false
 }));
