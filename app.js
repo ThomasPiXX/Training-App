@@ -163,8 +163,7 @@ function passwordHasher(password, callback){
 /////////////////////////////////////////////////////
 //Acount creating form path
 app.get('/createAccount', (req, res) =>{
-  const csrfToken = req.csrfToken();
-  res.render('createAccount', { csrfToken });
+  res.render('createAccount');
 })
 app.post('/createAccount', (req, res) => {
     const { username, userPassword } = req.body;
@@ -186,9 +185,13 @@ app.post('/createAccount', (req, res) => {
             }
           // Store the hashed password in the database
           db.run("INSERT INTO users (user_name, user_password,user_exp, user_lvl) VALUES (?, ?, ?, ?)", [username, hashedPassword, 0, 0], function(error) {
-            if (error) throw error;
+            if (error){
+              console.log(error);
+              res.status(400).send('error trying to insert user to Database');
+            }else{
             console.log("User account added");
-            res.redirect('/dashboard');
+            res.redirect('/login');
+            }
           });
         });
       }
